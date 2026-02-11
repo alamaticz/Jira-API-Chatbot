@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Jira Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-color: #0052cc;
+            /* Atlassian Blue */
+            --primary-hover: #0065ff;
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-color: #172b4d;
+            --border-color: #dfe1e6;
+            --shadow: 0 4px 8px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .search-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-top: 30px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tag {
+            background: #dfe1e6;
+            color: #42526e;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .issue-header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .issue-header h3 {
+            margin: 0 0 10px 0;
+            color: #172b4d;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #fafbfc;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .meta-item b {
+            display: block;
+            font-size: 12px;
+            color: #5e6c84;
+            margin-bottom: 4px;
+        }
+
+        /* Description Content Styles */
+        .description-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #172b4d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .description-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #172b4d;
+            background: #fff;
+        }
+
+        .description-content h1,
+        .description-content h2,
+        .description-content h3,
+        .description-content h4,
+        .description-content h5,
+        .description-content h6 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #172b4d;
+        }
+
+        .description-content ul,
+        .description-content ol {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .description-content pre {
+            background: #f4f5f7;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #dfe1e6;
+        }
+
+        .description-content code {
+            background: rgba(9, 30, 66, 0.08);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'SFMono-Medium', 'SF Mono', 'Segoe UI Mono', 'Roboto Mono', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+
+        .description-content blockquote {
+            border-left: 4px solid var(--primary-color);
+            margin: 0;
+            padding-left: 15px;
+            color: #6b778c;
+        }
+
+        /* Lists for Subtasks, Attachments, Comments */
+        .section-header {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 16px;
+            color: #172b4d;
+        }
+
+        ul.clean-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul.clean-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ebecf0;
+        }
+
+        ul.clean-list li:last-child {
+            border-bottom: none;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #fafbfc;
+            color: #5e6c84;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Jira Issue Chatbot</h2>
+            <p>Enter an issue key to view details.</p>
+        </div>
+
+        <div class="search-box">
+            <input id="issueKey" placeholder="Enter Issue Key (e.g. HRLIF-2177)" autofocus>
+            <button onclick="fetchIssue()">Fetch</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Enter key support
+        document.getElementById("issueKey").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent default form submission if any
+                fetchIssue();
+            }
+        });
+
+        async function fetchIssue() {
+            const keyInput = document.getElementById("issueKey");
+            const key = keyInput.value.trim();
+
+            if (!key) return;
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: #666;">Loading...</div>';
+
+            try {
+                const res = await fetch(`/api/issue/${key}`);
+                const data = await res.json();
+
+                if (res.status !== 200) {
+                    resultDiv.innerHTML = `<div class="card" style="text-align:center; color: #de350b;">
+                        <h3>Issue not found</h3>
+                        <p>Could not find issue with key <b>${key}</b>. Please check permissions or key validity.</p>
+                    </div>`;
+                    return;
+                }
+
+                let html = `
+                    <div class="card">
+                        <div class="issue-header">
+                            <h3><a href="${data.url || '#'}" target="_blank">${data.key}</a>: ${data.summary}</h3>
+                            <span class="tag">${data.status}</span>
+                            <span class="tag">${data.issue_type}</span>
+                            <span class="tag">${data.priority || 'No Priority'}</span>
+                        </div>
+
+                        <div class="meta-grid">
+                            <div class="meta-item"><b>Assignee</b> ${data.assignee}</div>
+                            <div class="meta-item"><b>Created</b> ${new Date(data.created).toLocaleDateString()}</div>
+                            <div class="meta-item"><b>Updated</b> ${new Date(data.updated).toLocaleDateString()}</div>
+                        </div>
+
+                        <div class="description-label">Description</div>
+                        <div class="description-content">${data.description || '<i>No description provided.</i>'}</div>
+                `;
+
+                if (data.subtasks && data.subtasks.length) {
+                    html += `<h4 class="section-header">Subtasks</h4><ul class="clean-list">`;
+                    data.subtasks.forEach(s =>
+                        html += `<li><span class="tag">${s.status}</span> <b>${s.key}</b> - ${s.summary}</li>`
+                    );
+                    html += "</ul>";
+                }
+
+                if (data.attachments && data.attachments.length) {
+                    html += `<h4 class="section-header">Attachments</h4><ul class="clean-list">`;
+                    data.attachments.forEach(a =>
+                        html += `<li> <a href="/api/attachment?url=${encodeURIComponent(a.url)}&filename=${encodeURIComponent(a.filename)}">${a.filename}</a> <span style="color:#6b778c; font-size:12px;">(${formatBytes(a.size)})</span></li>`
+                    );
+                    html += "</ul>";
+                }
+
+                if (data.comments && data.comments.length) {
+                    html += `<h4 class="section-header">Comments</h4><ul class="clean-list">`;
+                    data.comments.forEach(c =>
+                        html += `
+                        <li style="padding: 15px 0;">
+                            <div style="font-size:12px; color:#5e6c84; margin-bottom:5px;">
+                                <b>${c.author}</b> • ${new Date(c.created).toLocaleString()}
+                            </div>
+                            <div class="description-content">${c.body}</div>
+                        </li>`
+                    );
+                    html += "</ul>";
+                }
+
+                if (data.epic_children && data.epic_children.length) {
+                    html += `<h4 class="section-header">Stories in this Epic</h4>`;
+                    html += "<table>";
+                    html += "<tr><th>Key</th><th>Summary</th><th>Type</th><th>Status</th><th>Assignee</th></tr>";
+
+                    data.epic_children.forEach(e => {
+                        html += `
+                        <tr>
+                            <td>${e.key}</td>
+                            <td>${e.summary}</td>
+                            <td>${e.type}</td>
+                            <td>${e.status}</td>
+                            <td>${e.assignee}</td>
+                        </tr>
+                    `;
+                    });
+
+                    html += "</table>";
+                }
+
+                html += "</div>"; // Close card
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="card" style="color:red;">Error fetching issue: ${error.message}</div>`;
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+    </script>
+
+</body>
+
+</html>
