@@ -16,7 +16,18 @@ JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
 auth = HTTPBasicAuth(JIRA_EMAIL, JIRA_API_TOKEN)
 headers = {"Accept": "application/json"}
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For production, replace with specific Vercel URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 templates = Jinja2Templates(directory="templates")
 
 

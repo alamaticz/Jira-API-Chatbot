@@ -273,6 +273,8 @@
     </div>
 
     <script>
+        const API_BASE = "https://jira-api-1yb3.onrender.com";
+
         // Enter key support
         document.getElementById("issueKey").addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
@@ -291,7 +293,7 @@
             resultDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: #666;">Loading...</div>';
 
             try {
-                const res = await fetch(`/api/issue/${key}`);
+                const res = await fetch(`${API_BASE}/api/issue/${key}`);
                 const data = await res.json();
 
                 if (res.status !== 200) {
@@ -332,7 +334,7 @@
                 if (data.attachments && data.attachments.length) {
                     html += `<h4 class="section-header">Attachments</h4><ul class="clean-list">`;
                     data.attachments.forEach(a =>
-                        html += `<li> <a href="/api/attachment?url=${encodeURIComponent(a.url)}&filename=${encodeURIComponent(a.filename)}">${a.filename}</a> <span style="color:#6b778c; font-size:12px;">(${formatBytes(a.size)})</span></li>`
+                        html += `<li> <a href="${API_BASE}/api/attachment?url=${encodeURIComponent(a.url)}&filename=${encodeURIComponent(a.filename)}" target="_blank">${a.filename}</a> <span style="color:#6b778c; font-size:12px;">(${formatBytes(a.size)})</span></li>`
                     );
                     html += "</ul>";
                 }
